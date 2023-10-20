@@ -15,7 +15,7 @@ let imap = new Imap({
 });
 
 function openInbox(cb) {
-  imap.openBox('INBOX', true, cb);
+  imap.openBox('INBOX', false, cb);
 }
 
 imap.once('ready', function() {
@@ -45,6 +45,15 @@ imap.once('ready', function() {
                 let aTag = `<a href="${href}">${href}</a>`;
                 // Add the <a> tag to the links array
                 links.push(aTag);
+
+                // Mark the email as read by setting the SEEN flag
+                imap.seq.addFlags(seqno, '\\Seen', function(err) { // Updated this line
+                  if (err) {
+                    console.log('Error marking email as read:', err);
+                  } else {
+                    console.log('Email marked as read');
+                  }
+                });
               }
             });
 
