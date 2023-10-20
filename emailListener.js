@@ -2,6 +2,7 @@ const Imap = require('imap');
 const cheerio = require('cheerio');
 const nodemailer = require('nodemailer');
 const util = require('util');
+const quotedPrintable = require('quoted-printable');
 
 let imap = new Imap({
   user: 'timmy.moreels@gmail.com',
@@ -31,11 +32,22 @@ imap.once('ready', function() {
             buffer += chunk.toString('utf8');
           });
           stream.once('end', function() {
-            let $ = cheerio.load(buffer);
+            let cleanedBuffer = buffer.replace(/=\r\n/g, '');
+            let decodedBuffer = quotedPrintable.decode(cleanedBuffer);
+            let $ = cheerio.load(decodedBuffer);
+
             let links = [];
             $('a').each((i, link) => {
-              links.push($(link).attr('href'));
+              let href = $(link).attr('href');
+              // Check if the href contains the specific string
+              if (href && href.includes('https://www.dhlparcel.nl/nl/zakelijk/zending')) {
+                // Create a properly formatted <a> tag
+                let aTag = `<a href="${href}">${href}</a>`;
+                // Add the <a> tag to the links array
+                links.push(aTag);
+              }
             });
+
             // Now 'links' contains all the links in the email
             // You can now send the tracking links to the customers
             let transporter = nodemailer.createTransport({
@@ -49,7 +61,7 @@ imap.once('ready', function() {
               from: 'timmy.moreels@gmail.com',
               to: 'dysiscypher@gmail.com',
               subject: 'Your tracking link',
-              text: 'Here is your tracking link: ' + links[0] // replace this with the actual link
+              html: 'Here is your tracking link: ' + links[0] // replace this with the actual link
             };
             transporter.sendMail(mailOptions, (error, info) => {
               if (error) {
@@ -77,4 +89,3 @@ imap.once('end', function() {
 });
 
 imap.connect();
-
