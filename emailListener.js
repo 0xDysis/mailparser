@@ -31,7 +31,7 @@ imap.once('ready', function() {
     if (err) throw err;
     imap.search(['UNSEEN', ['FROM', 'dysishomer@gmail.com']], function(err, results) {
       if (err) throw err;
-      let f = imap.fetch(results, { bodies: '' });
+      let f = imap.fetch(results, { bodies: '', markSeen: true }); // This will mark the emails as seen
       f.on('message', function(msg, seqno) {
         let prefix = '(#' + seqno + ') ';
         msg.on('body', function(stream, info) {
@@ -72,13 +72,7 @@ imap.once('ready', function() {
                   }
               });
               
-              imap.seq.addFlags(seqno, '\\Seen', function(err) {
-                  if (err) {
-                      console.log('Error marking email as read:', err);
-                  } else {
-                      console.log('Email marked as read');
-                  }
-              });
+              
               
 
                 let transporter = nodemailer.createTransport({
@@ -119,9 +113,9 @@ imap.once('ready', function() {
                   } else {
                     console.log('Email sent: ' + info.response);
                   }
-                });
-              }
-            });
+                  });
+                }
+              });
           });
         });
       });
@@ -141,5 +135,3 @@ imap.once('end', function() {
 });
 
 imap.connect();
-
-
