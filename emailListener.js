@@ -6,8 +6,8 @@ const WooCommerceAPI = require('woocommerce-api');
 
 const WooCommerce = new WooCommerceAPI({
   url: 'https://test.kunstinjekeuken.nl/',
-  consumerKey: 'c',
-  consumerSecret: 'c',
+  consumerKey: 'ck_6d6a86355ba932b80e23257c36a0f11f1b6b5a94',
+  consumerSecret: 'cs_f1e81086ddbec4fcf2b13e05f83aa9b14c957266',
   wpAPI: true,
   version: 'wc/v3'
 });
@@ -61,23 +61,25 @@ imap.once('ready', function() {
               let order = JSON.parse(res);
               if (order) {
                 let email = order.billing.email;
+                let billing_first_name = order.billing.first_name; // Extract the billing_first_name from the order object
           
                 let links = [];
                 $('a').each((i, link) => {
                   let href = $(link).attr('href');
                   if (href && href.includes('https://www.dhlparcel.nl/nl/zakelijk/zending')) {
-                    let aTag = `<a href="${href}">${href}</a>`;
-                    links.push(aTag);
-
-                    imap.seq.addFlags(seqno, '\\Seen', function(err) {
-                      if (err) {
-                        console.log('Error marking email as read:', err);
-                      } else {
-                        console.log('Email marked as read');
-                      }
-                    });
+                      let aTag = `<a href="${href}">${href}</a>`;
+                      links.push(aTag);
                   }
-                });
+              });
+              
+              imap.seq.addFlags(seqno, '\\Seen', function(err) {
+                  if (err) {
+                      console.log('Error marking email as read:', err);
+                  } else {
+                      console.log('Email marked as read');
+                  }
+              });
+              
 
                 let transporter = nodemailer.createTransport({
                   service: 'gmail',
@@ -89,9 +91,28 @@ imap.once('ready', function() {
                 let mailOptions = {
                   from: 'timmy.moreels@gmail.com',
                   to: email,
-                  subject: 'Your tracking link',
-                  html: 'Here is your tracking link: ' + links[0]
+                  subject: 'Je bestelling is onderweg',
+                  html: `
+                    <p>Hoi ${billing_first_name},</p>
+                    <p>Je bestelling is met de koerier mee. Zodra die vanavond in het DHL depot is aangekomen kun je hem volgen via deze Track&amp;Trace code:<a ${links[0]}</a>
+                    </p>
+                    <p>Controleer hem meteen nadat hij is afgeleverd. Graag hoor ik binnen twee dagen na ontvangst of hij in goede orde is aangekomen.</p>
+                    <p>Ik wens je er alvast veel plezier mee! Je maakt mij heel blij met een voor en na foto シ</p>
+                    <p>--<br>
+                    Met vriendelijke groet,<br>
+                    Leila<br>
+                    M 06 242 04 138<br>
+                    ​<br>
+                    Kunst in je keuken<br>
+                    Kortrijk 83 | 1066 TB Amsterdam<br>
+                    <a href="http://www.kunstinjekeuken.nl">www.kunstinjekeuken.nl</a> | <a href="https://www.instagram.com/kunstinjekeuken/">Instagram</a> | <a href="https://www.facebook.com/leila.kunstinjekeuken/">Facebook</a></p>
+                    
+                  `
                 };
+                
+                  
+                    
+                
                 transporter.sendMail(mailOptions, (error, info) => {
                   if (error) {
                     console.log(error);
