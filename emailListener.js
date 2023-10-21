@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const nodemailer = require('nodemailer');
 const quotedPrintable = require('quoted-printable');
 const WooCommerceAPI = require('woocommerce-api');
+const cron = require('node-cron');
 
 const WooCommerce = new WooCommerceAPI({
   url: 'https://test.kunstinjekeuken.nl/',
@@ -31,7 +32,7 @@ imap.once('ready', function() {
     if (err) throw err;
     imap.search(['UNSEEN', ['FROM', 'dysishomer@gmail.com']], function(err, results) {
       if (err) throw err;
-      let f = imap.fetch(results, { bodies: '', markSeen: true }); // This will mark the emails as seen
+      let f = imap.fetch(results, { bodies: '', markSeen: true }); 
       f.on('message', function(msg, seqno) {
         let prefix = '(#' + seqno + ') ';
         msg.on('body', function(stream, info) {
@@ -88,18 +89,25 @@ imap.once('ready', function() {
                   subject: 'Je bestelling is onderweg',
                   html: `
                     <p>Hoi ${billing_first_name},</p>
-                    <p>Je bestelling is met de koerier mee. Zodra die vanavond in het DHL depot is aangekomen kun je hem volgen via deze Track&amp;Trace code:<a ${links[0]}</a>
+                    <p>Je bestelling is met de koerier mee. Zodra die vanavond in het DHL depot is aangekomen kun je hem volgen via deze Track&amp;Trace code: <a ${links[0]}</a>
                     </p>
                     <p>Controleer hem meteen nadat hij is afgeleverd. Graag hoor ik binnen twee dagen na ontvangst of hij in goede orde is aangekomen.</p>
                     <p>Ik wens je er alvast veel plezier mee! Je maakt mij heel blij met een voor en na foto シ</p>
-                    <p>--<br>
-                    Met vriendelijke groet,<br>
-                    Leila<br>
-                    M 06 242 04 138<br>
-                    ​<br>
-                    Kunst in je keuken<br>
-                    Kortrijk 83 | 1066 TB Amsterdam<br>
-                    <a href="http://www.kunstinjekeuken.nl">www.kunstinjekeuken.nl</a> | <a href="https://www.instagram.com/kunstinjekeuken/">Instagram</a> | <a href="https://www.facebook.com/leila.kunstinjekeuken/">Facebook</a></p>
+                    <div style="color: grey;">
+                    <p>
+                      --<br>
+                      <div style="line-height: 15px;">
+                      Met vriendelijke groet,<br>
+                      Leila<br>
+                      M 06 242 04 138<br>
+                      <br>
+                      <img src="https://i.imgur.com/jgVqcUZ.png" width="50" height="50" style="vertical-align: 0px;">
+                      <p style="margin: 0;">Kunst in je keuken</p>
+                      <p style="margin: 0;">Kortrijk 83 | 1066 TB Amsterdam</p>
+                    </div>
+                  
+                  
+                    <a href="http://www.kunstinjekeuken.nl">kunstinjekeuken.nl</a> | <a href="https://www.instagram.com/kunstinjekeuken/">Instagram</a> | <a href="https://www.facebook.com/leila.kunstinjekeuken/">Facebook</a></p>
                     
                   `
                 };
@@ -135,3 +143,4 @@ imap.once('end', function() {
 });
 
 imap.connect();
+cron.schedule('*/5 * * * *', checkEmails);
