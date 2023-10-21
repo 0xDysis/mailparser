@@ -1,8 +1,16 @@
 const Imap = require('imap');
 const cheerio = require('cheerio');
 const nodemailer = require('nodemailer');
-const util = require('util');
 const quotedPrintable = require('quoted-printable');
+const WooCommerceAPI = require('woocommerce-api');
+
+const WooCommerce = new WooCommerceAPI({
+  url: 'https://test.kunstinjekeuken.nl/',
+  consumerKey: 'ck_6d6a86355ba932b80e23257c36a0f11f1b6b5a94',
+  consumerSecret: 'cs_f1e81086ddbec4fcf2b13e05f83aa9b14c957266',
+  wpAPI: true,
+  version: 'wc/v3'
+});
 
 let imap = new Imap({
   user: 'timmy.moreels@gmail.com',
@@ -11,7 +19,7 @@ let imap = new Imap({
   port: 993,
   tls: true,
   tlsOptions: { rejectUnauthorized: false },
-  connTimeout: 10000 // Increase this as needed
+  connTimeout: 10000
 });
 
 function openInbox(cb) {
@@ -33,50 +41,64 @@ imap.once('ready', function() {
           });
           stream.once('end', function() {
             let cleanedBuffer = buffer.replace(/=\r\n/g, '');
-            let decodedBuffer = quotedPrintable.decode(cleanedBuffer);
+            let decodedBuffer = quotedPrintable.decode(cleanedBuffer, 'utf8'); 
             let $ = cheerio.load(decodedBuffer);
+          
+            
+            let referenceNumberElement = $('p:contains("Referentie")').find('strong').first();
+            let referenceNumber = referenceNumberElement.text().replace('#', '');
+          
+           
+            console.log('Reference number: ' + referenceNumber);
+          
+            
+            referenceNumber = referenceNumber.replace(/\D+$/, '');
+          
+            
+            WooCommerce.get(`orders/${referenceNumber}`, function(err, data, res) {
+              if (err) throw err;
+          
+              let order = JSON.parse(res);
+              if (order) {
+                let email = order.billing.email;
+          
+                let links = [];
+                $('a').each((i, link) => {
+                  let href = $(link).attr('href');
+                  if (href && href.includes('https://www.dhlparcel.nl/nl/zakelijk/zending')) {
+                    let aTag = `<a href="${href}">${href}</a>`;
+                    links.push(aTag);
 
-            let links = [];
-            $('a').each((i, link) => {
-              let href = $(link).attr('href');
-              // Check if the href contains the specific string
-              if (href && href.includes('https://www.dhlparcel.nl/nl/zakelijk/zending')) {
-                // Create a properly formatted <a> tag
-                let aTag = `<a href="${href}">${href}</a>`;
-                // Add the <a> tag to the links array
-                links.push(aTag);
-
-                // Mark the email as read by setting the SEEN flag
-                imap.seq.addFlags(seqno, '\\Seen', function(err) { // Updated this line
-                  if (err) {
-                    console.log('Error marking email as read:', err);
-                  } else {
-                    console.log('Email marked as read');
+                    imap.seq.addFlags(seqno, '\\Seen', function(err) {
+                      if (err) {
+                        console.log('Error marking email as read:', err);
+                      } else {
+                        console.log('Email marked as read');
+                      }
+                    });
                   }
                 });
-              }
-            });
 
-            // Now 'links' contains all the links in the email
-            // You can now send the tracking links to the customers
-            let transporter = nodemailer.createTransport({
-              service: 'gmail',
-              auth: {
-                user: 'timmy.moreels@gmail.com',
-                pass: 'wgpt ungg iake tqbf'
-              }
-            });
-            let mailOptions = {
-              from: 'timmy.moreels@gmail.com',
-              to: 'dysiscypher@gmail.com',
-              subject: 'Your tracking link',
-              html: 'Here is your tracking link: ' + links[0] // replace this with the actual link
-            };
-            transporter.sendMail(mailOptions, (error, info) => {
-              if (error) {
-                console.log(error);
-              } else {
-                console.log('Email sent: ' + info.response);
+                let transporter = nodemailer.createTransport({
+                  service: 'gmail',
+                  auth: {
+                    user: 'timmy.moreels@gmail.com',
+                    pass: 'wgpt ungg iake tqbf'
+                  }
+                });
+                let mailOptions = {
+                  from: 'timmy.moreels@gmail.com',
+                  to: email,
+                  subject: 'Your tracking link',
+                  html: 'Here is your tracking link: ' + links[0]
+                };
+                transporter.sendMail(mailOptions, (error, info) => {
+                  if (error) {
+                    console.log(error);
+                  } else {
+                    console.log('Email sent: ' + info.response);
+                  }
+                });
               }
             });
           });
@@ -98,3 +120,5 @@ imap.once('end', function() {
 });
 
 imap.connect();
+
+
