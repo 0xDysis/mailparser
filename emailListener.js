@@ -14,8 +14,8 @@ const WooCommerce = new WooCommerceAPI({
 });
 
 let imap = new Imap({
-  user: 'timmy.moreels@gmail.com',
-  password: 'wgpt ungg iake tqbf',
+  user: 'leila.haqi@gmail.com',
+  password: 'diid ezch goue hayw',
   host: 'imap.gmail.com',
   port: 993,
   tls: true,
@@ -33,7 +33,7 @@ imap.once('ready', function() {
     console.error('Error opening inbox:', err);
     return;
   }
-    imap.search(['UNSEEN', ['FROM', 'dysishomer@gmail.com']], function(err, results) {
+    imap.search(['UNSEEN', ['FROM', 'info@drukland.nl']], function(err, results) {
       if (err) throw err;
       if (results.length === 0) {
         console.log('No new emails to fetch');
@@ -86,12 +86,12 @@ imap.once('ready', function() {
                 let transporter = nodemailer.createTransport({
                   service: 'gmail',
                   auth: {
-                    user: 'timmy.moreels@gmail.com',
-                    pass: 'wgpt ungg iake tqbf'
+                    user: 'kunstinjekeuken@gmail.com',
+                    pass: 'ndwu mhwn mjro fvyo'
                   }
                 });
                 let mailOptions = {
-                  from: 'timmy.moreels@gmail.com',
+                  from: 'kunstinjekeuken@gmail.com',
                   to: email,
                   subject: 'Je bestelling is onderweg',
                   html: `
@@ -103,14 +103,12 @@ imap.once('ready', function() {
                     <div style="color: grey;">
                     <p>
                       --<br>
-                      <div style="line-height: 15px;">
+                      <div style="line-height: 20px;">
                       Met vriendelijke groet,<br>
                       Leila<br>
-                      M 06 242 04 138<br>
-                      <br>
-                      <img src="https://i.imgur.com/jgVqcUZ.png" width="50" height="50" style="vertical-align: 0px;">
+                  <img src="https://i.imgur.com/jgVqcUZ.png" width="50" height="50" style="vertical-align: 0px;">
                       <p style="margin: 0;">Kunst in je keuken</p>
-                      <p style="margin: 0;">Kortrijk 83 | 1066 TB Amsterdam</p>
+                     
                     </div>
                   
                   
