@@ -26,12 +26,19 @@ let imap = new Imap({
 function openInbox(cb) {
   imap.openBox('INBOX', false, cb);
 }
-
+function checkEmails() {
 imap.once('ready', function() {
   openInbox(function(err, box) {
-    if (err) throw err;
+    if (err)  {
+    console.error('Error opening inbox:', err);
+    return;
+  }
     imap.search(['UNSEEN', ['FROM', 'dysishomer@gmail.com']], function(err, results) {
       if (err) throw err;
+      if (results.length === 0) {
+        console.log('No new emails to fetch');
+        return;  // Return from the function without doing anything
+      }
       let f = imap.fetch(results, { bodies: '', markSeen: true }); 
       f.on('message', function(msg, seqno) {
         let prefix = '(#' + seqno + ') ';
@@ -143,4 +150,5 @@ imap.once('end', function() {
 });
 
 imap.connect();
+}
 cron.schedule('*/5 * * * *', checkEmails);
