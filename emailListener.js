@@ -7,8 +7,8 @@ const cron = require('node-cron');
 
 const WooCommerce = new WooCommerceAPI({
   url: 'https://test.kunstinjekeuken.nl/',
-  consumerKey: 'ck_6d6a86355ba932b80e23257c36a0f11f1b6b5a94',
-  consumerSecret: 'cs_f1e81086ddbec4fcf2b13e05f83aa9b14c957266',
+  consumerKey: 'x',
+  consumerSecret: 'x',
   wpAPI: true,
   version: 'wc/v3'
 });
